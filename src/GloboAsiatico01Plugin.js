@@ -1,12 +1,12 @@
-import React from 'react';
-import { FlexPlugin } from '@twilio/flex-plugin';
+import React from "react";
+import { FlexPlugin } from "@twilio/flex-plugin";
 
-import CustomTaskList from './components/CustomTaskList/CustomTaskList';
+import CustomTaskList from "./components/CustomTaskList/CustomTaskList";
 
-import globoLogo from './assets/globo-asiatico-logo.jpg';
-import cynLogo from './assets/cyn-logo.jpeg';
+import globoLogo from "./assets/globo-asiatico-logo.jpg";
+import cynLogo from "./assets/cyn-logo.jpeg";
 
-const PLUGIN_NAME = 'GloboAsiatico01Plugin';
+const PLUGIN_NAME = "GloboAsiatico01Plugin";
 
 export default class GloboAsiatico01Plugin extends FlexPlugin {
   constructor() {
@@ -26,34 +26,34 @@ export default class GloboAsiatico01Plugin extends FlexPlugin {
       <div
         key="custom-header"
         style={{
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginLeft: '10px',
-          marginRight: '-27px'
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginLeft: "10px",
+          marginRight: "-27px",
         }}
       >
         <img
           src={globoLogo}
           alt="Globo Asiatico"
-          style={{ height: '30px', marginRight: '5px' }}
+          style={{ height: "30px", marginRight: "5px" }}
         />
         <p>Globo Asiatico Powered by</p>
 
         <img
           src={cynLogo}
           alt="CYN Solutions Inc."
-          style={{ height: '30px', marginRight: '5px', marginLeft: '5px' }}
+          style={{ height: "30px", marginRight: "5px", marginLeft: "5px" }}
         />
         <p>CYN Solutions Inc. </p>
-        <p style={{ fontSize: '19px', marginLeft: '8px' }}>X</p>
+        <p style={{ fontSize: "19px", marginLeft: "8px" }}>X</p>
       </div>,
       { sortOrder: 1 }
     );
 
     // * No Task String
-    manager.strings.NoTasks = 'No task right now, go make some coffee. :)';
+    manager.strings.NoTasks = "No task right now, go make some coffee. :)";
 
     // * Panel 1
     flex.AgentDesktopView.Panel1.Content.add(
@@ -65,30 +65,53 @@ export default class GloboAsiatico01Plugin extends FlexPlugin {
     flex.AgentDesktopView.defaultProps.showPanel2 = false;
 
     // ? Inbound Call Phone number format
-    flex.Actions.replaceAction('StartOutboundCall', (payload, original) => {
+    flex.Actions.replaceAction("StartOutboundCall", (payload, original) => {
       // Default all outbound calls to external SIP interface
       /*
        * Instructions:
        * Replace "sipInterfaceIPAddress" with external SIP Interface
        */
 
-      const sipInterfaceIPAddress = '98.158.148.76';
-      const technicalprefix = '3953';
-      const termination = ';edge=tokyo';
+      const sipInterfaceIPAddress = "98.158.148.76";
+      const technicalprefix = "3953";
+      const termination = ";edge=tokyo";
 
       console.log(`Before payload Destigation: ${payload.destination}`);
 
       payload.destination =
-        'sip:' +
+        "sip:" +
         technicalprefix +
         payload.destination +
         `@${sipInterfaceIPAddress}` +
         termination;
-      payload.callerId = '+639190599575';
-      console.log('updated outbound call to:', payload);
+      payload.callerId = "+639190599575";
+      console.log("updated outbound call to:", payload);
       original(payload);
     });
 
-    console.log('OUTSIDE updated outbound call to:', payload);
+    let alertSound = new Audio("https://demo.twilio.com/docs/classic.mp3");
+    alertSound.loop = true;
+
+    const resStatus = [
+      "accepted",
+      "canceled",
+      "rejected",
+      "rescinded",
+      "timeout",
+    ];
+
+    manager.workerClient.on("reservationCreated", function (reservation) {
+      if (
+        reservation.task.taskChannelUniqueName === "voice" &&
+        reservation.task.attributes.direction === "inbound"
+      ) {
+        alertSound.play();
+      }
+      resStatus.forEach((e) => {
+        reservation.on(e, () => {
+          alertSound.pause();
+        });
+      });
+    });
   }
 }
