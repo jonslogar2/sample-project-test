@@ -62,7 +62,7 @@ export default class GloboAsiatico01Plugin extends FlexPlugin {
     );
 
     // ? Panel 2: Removed CRM Side for now
-    flex.AgentDesktopView.defaultProps.showPanel2 = false;
+    // flex.AgentDesktopView.defaultProps.showPanel2 = false;
 
     // ? Inbound Call Phone number format
     flex.Actions.replaceAction("StartOutboundCall", (payload, original) => {
@@ -113,5 +113,16 @@ export default class GloboAsiatico01Plugin extends FlexPlugin {
         });
       });
     });
+
+    // * CRM
+    flex.CRMContainer.defaultProps.uriCallback = (task) => {
+      console.log(task);
+      if (task && task.attributes.crmid) {
+        const url = `https://app.hubspot.com/contacts/45004415/record/0-1/${task.attributes.crmid}`;
+        console.log(`URL`, url);
+        return url;
+      } else
+        return "https://app.hubspot.com/contacts/24056634/objects/0-1/views/my/list";
+    };
   }
 }
